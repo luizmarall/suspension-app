@@ -5,12 +5,17 @@ interface GanttChartProps {
 }
 
 export function GanttChart({ activities }: GanttChartProps) {
-  // Parse date string (DD/MM) to day of year
+  // Parse date string (DD/MM) to calculate days from project start (24/10/2025)
+  const PROJECT_START = new Date(2025, 9, 24); // October 24, 2025
+  const PROJECT_END = new Date(2026, 0, 31); // January 31, 2026
+  const TOTAL_DAYS = Math.ceil((PROJECT_END.getTime() - PROJECT_START.getTime()) / (1000 * 60 * 60 * 24));
+
   const getDatePosition = (dateStr: string): number => {
     const [day, month] = dateStr.split("/").map(Number);
-    const date = new Date(2025, month - 1, day);
-    const start = new Date(2025, 0, 1);
-    const diff = Math.floor((date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    // Determine year: if month is 10, 11, 12 it's 2025, otherwise 2026
+    const year = month >= 10 ? 2025 : 2026;
+    const date = new Date(year, month - 1, day);
+    const diff = Math.floor((date.getTime() - PROJECT_START.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(0, diff);
   };
 
@@ -41,15 +46,14 @@ export function GanttChart({ activities }: GanttChartProps) {
     }
   };
 
-  // Calculate positions and widths
-  const maxDays = 60; // Total days in timeline
+  // Calculate positions and widths based on total project duration
   const calculateBarStyle = (startDate: string, duration: number) => {
     const startPos = getDatePosition(startDate);
-    const leftPercent = (startPos / maxDays) * 100;
-    const widthPercent = (duration / maxDays) * 100;
+    const leftPercent = (startPos / TOTAL_DAYS) * 100;
+    const widthPercent = (duration / TOTAL_DAYS) * 100;
     return {
-      left: `${leftPercent}%`,
-      width: `${widthPercent}%`,
+      left: `${Math.min(leftPercent, 100)}%`,
+      width: `${Math.min(widthPercent, 100 - leftPercent)}%`,
     };
   };
 
@@ -62,10 +66,16 @@ export function GanttChart({ activities }: GanttChartProps) {
           {/* Month markers */}
           <div className="absolute inset-0 flex">
             <div className="flex-1 border-r border-gray-300 flex items-center justify-center text-xs font-semibold text-gray-600">
-              Janeiro
+              Outubro
             </div>
             <div className="flex-1 border-r border-gray-300 flex items-center justify-center text-xs font-semibold text-gray-600">
-              Fevereiro
+              Novembro
+            </div>
+            <div className="flex-1 border-r border-gray-300 flex items-center justify-center text-xs font-semibold text-gray-600">
+              Dezembro
+            </div>
+            <div className="flex-1 flex items-center justify-center text-xs font-semibold text-gray-600">
+              Janeiro
             </div>
           </div>
         </div>
